@@ -1,0 +1,15 @@
+{% extends "dock_scheduler/base.html" %}
+{% block content %}
+    {% for dock in docks %}
+	<article class="media content-section">
+	  <div class="media-body">
+	    <div class="article-metadata">
+	      <a class="mr-2" href="#">Driver ID: {{ dock.driver }}</a>
+	      <small class="text-muted">Order ID: {{ dock.order }}</small>
+	    </div>
+	    <h2><a class="article-title" href="#">Dock number {{ dock.id }}</a></h2>
+	    <p class="article-content">{{ dock.type }}, {{dock.status}}</p>
+	  </div>
+	</article>
+    {% endfor %}
+{% endblock content %}
