@@ -30,7 +30,7 @@
             <div class="navbar-nav mr-auto">
 <!--              <a class="nav-item nav-link" href="{% url 'scheduler-home' %}">Home</a>-->
               <a class="nav-item nav-link" href="{% url 'scheduler-booking' %}">Booking</a>
-              {% if user|has_group:"Managers" %}
+              {% if user|has_group:"Managers" or user.is_superuser %}
                 <a class="nav-item nav-link" href="{% url 'scheduler-bookings' %}">Reservations</a>
               {% endif %}
             </div>
