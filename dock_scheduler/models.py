@@ -11,15 +11,15 @@ class Dock(models.Model):
     DOCK_TYPE_CHOICES = [
         (TRAILER, 'Trailer'),
         (FURGONETA, 'Furgoneta'),
-        (LONA, 'Lona'),
+        (LONA, 'Camión de lona'),
     ]
 
     # dock state
     FREE = 'FR'
     OCCUPIED = 'OC'
     DOCK_STATE_CHOICES = [
-        (FREE, 'Free'),
-        (OCCUPIED, 'Occupied'),
+        (FREE, 'Libre'),
+        (OCCUPIED, 'Ocupado'),
     ]
 
     number = models.SmallIntegerField()
@@ -42,8 +42,9 @@ class TimeSegment(models.Model):
     # foreign key
     dock = models.ForeignKey(Dock, on_delete=models.CASCADE)
     # segment
-    start_time = models.DateField()
-    end_time = models.DateField()
+    day = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
     # activity
     LOAD = 'CA'
     UNLOAD = 'DE'
@@ -58,7 +59,7 @@ class TimeSegment(models.Model):
         choices=ACTIVITIES)
 
     def __str__(self):
-        return f'Dock {self.dock.number}, {self.activity} from {self.start_time} to {self.end_time}'
+        return f'D{self.dock.number} | {self.activity} | {self.start_time} - {self.end_time}'
 
 
 class Booking(models.Model):
