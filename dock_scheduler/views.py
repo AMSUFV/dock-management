@@ -2,30 +2,16 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 
-from .forms import BookingForm
+from .forms import BookingForm, SearchForm
 from .models import *
-
-docks = [
-    {
-        'id': '0',
-        'driver': '4213KFN',
-        'order': '144326',
-        'type': 'Large',
-        'status': 'Booked'
-    },
-    {
-        'id': '1',
-        'driver': '5619HYI',
-        'order': '997351',
-        'type': 'Large',
-        'status': 'Free'
-    },
-]
 
 
 def home(request):
+    form = SearchForm()
     context = {
-        'docks': docks
+        'form': form,
+        'docks': Dock.objects.all(),
+        'title': 'Home',
     }
     return render(request, 'dock_scheduler/home.html', context)
 

@@ -3,6 +3,24 @@ from django.core.validators import RegexValidator
 
 
 class BookingForm(forms.Form):
+    # Activity to perform
+    LOAD = 'CA'
+    UNLOAD = 'DE'
+    ACTIVITIES = [
+        (LOAD, 'Carga'),
+        (UNLOAD, 'Descarga'),
+    ]
+
+    # vehicle type
+    TRAILER = 'TR'
+    VAN = 'VA'
+    TARPAULIN = 'CA'
+    DOCK_TYPE_CHOICES = [
+        (TRAILER, 'Trailer'),
+        (VAN, 'Van'),
+        (TARPAULIN, 'Tarpaulin truck'),
+    ]
+
     # Dock number
     dock_number = forms.IntegerField(
         label='Número de muelle',
@@ -17,15 +35,15 @@ class BookingForm(forms.Form):
     end_time = forms.TimeField(label='Hora de fin')
 
     # Activity to perform
-    LOAD = 'CA'
-    UNLOAD = 'DE'
-    ACTIVITIES = [
-        (LOAD, 'Carga'),
-        (UNLOAD, 'Descarga'),
-    ]
     activity = forms.CharField(
         label='Actividad a realizar',
         widget=forms.Select(choices=ACTIVITIES)
+    )
+
+    # Vehicle tu use
+    vehicle = forms.CharField(
+        label='Vehículo',
+        widget=forms.Select(choices=DOCK_TYPE_CHOICES)
     )
 
     # Order ID
@@ -56,3 +74,50 @@ class BookingManagement(forms.Form):
         max_length=6,
         validators=[RegexValidator(r'^\d{1,10}$')],
     )
+
+
+class SearchForm(forms.Form):
+    # Activity to perform
+    LOAD = 'CA'
+    UNLOAD = 'DE'
+    ACTIVITIES = [
+        (LOAD, 'Carga'),
+        (UNLOAD, 'Descarga'),
+    ]
+
+    # vehicle type
+    TRAILER = 'TR'
+    VAN = 'VA'
+    TARPAULIN = 'CA'
+    DOCK_TYPE_CHOICES = [
+        (TRAILER, 'Trailer'),
+        (VAN, 'Van'),
+        (TARPAULIN, 'Tarpaulin truck'),
+    ]
+
+    activity = forms.CharField(
+        label='Actividad a realizar',
+        widget=forms.Select(choices=ACTIVITIES)
+    )
+
+    # Vehicle tu use
+    vehicle = forms.CharField(
+        label='Vehículo',
+        widget=forms.Select(choices=DOCK_TYPE_CHOICES)
+    )
+
+    # Booking day and time
+    day = forms.DateField(
+        label='Fecha',
+        help_text='Con formato año-mes-día. Ej: (2020-03-25)',
+        required=False,
+    )
+    start_time = forms.TimeField(
+        label='Start time',
+        required=False,
+    )
+    end_time = forms.TimeField(
+        label='End time',
+        required='False',
+    )
+

@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+
 
 class Dock(models.Model):
     # dock type
@@ -82,9 +82,9 @@ class DockActivity(models.Model):
     UNLOAD = 'DE'
     UNAVAILABLE = 'ND'
     ACTIVITIES = [
-        (LOAD, 'Carga'),
-        (UNLOAD, 'Descarga'),
-        (UNAVAILABLE, 'No disponible'),
+        (LOAD, 'Load'),
+        (UNLOAD, 'Unload'),
+        (UNAVAILABLE, 'Unavailable'),
     ]
     activity = models.CharField(
         max_length=2,
@@ -113,8 +113,8 @@ class Order(models.Model):
 
 class Booking(models.Model):
     # foreign keys
-    time_segment = models.ForeignKey(
-        TimeSegment,
+    dock_activity = models.ForeignKey(
+        DockActivity,
         on_delete=models.CASCADE,
         unique=True,
     )
@@ -131,7 +131,7 @@ class Booking(models.Model):
     )
 
     def __str__(self):
-        return f'{self.driver} at {str(self.time_segment)}'
+        return f'{self.driver} at {str(self.dock_activity)}'
 
 
 

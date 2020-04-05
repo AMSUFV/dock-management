@@ -7,8 +7,8 @@
 	      <a class="mr-2" href="#">Driver ID: {{ booking.driver }}</a>
 	      <small class="text-muted">{{ booking.order }}</small>
 	    </div>
-	    <h2><a class="article-title" href="#">{{ booking.time_segment.dock}}</a></h2>
-	    <p class="article-content">{{ booking.time_segment.activity }} | {{ booking.time_segment.start_time }} to {{booking.time_segment.end_time }}</p>
+	    <h2><a class="article-title" href="#">{{ booking.dock_activity.dock}}</a></h2>
+	    <p class="article-content">{{ booking.dock_activity.activity }} | {{ booking.dock_activity.time_segment }}
 	  </div>
 	</article>
     {% endfor %}
