@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-
 
 class Dock(models.Model):
     # dock type
@@ -47,10 +47,22 @@ class TimeSegment(models.Model):
     day = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
-    # TODO: add validator so segments from the same day can't overlap
 
     def __str__(self):
         return f'{self.day}, {self.start_time} - {self.end_time}'
+
+    # TODO: add validator so segments from the same day can't overlap
+    def clean(self):
+        # making sure that the time slice makes sense
+        if self.start_time > self.end_time:
+            raise ValidationError('Start time should happen before end time.')
+        # making sure the time slice doesn't invade a different slice
+        query = TimeSegment.objects.filter(day=self.day)
+        for ts in query:
+            if ts.end_time > self.start_time > ts.start_time:
+                raise ValidationError(f'Time slice start invades a different one. {ts.start_time} to {ts.end_time}')
+            if ts.start_time < self.end_time < ts.end_time:
+                raise ValidationError(f'Time slice end invades a different one. {ts.start_time} to {ts.end_time}')
 
 
 class DockActivity(models.Model):
