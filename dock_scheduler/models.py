@@ -59,7 +59,7 @@ class TimeSegment(models.Model):
         choices=ACTIVITIES)
 
     def __str__(self):
-        return f'D{self.dock.number} | {self.activity} | {self.start_time} - {self.end_time}'
+        return f'D{self.dock.number} | {self.activity} |{self.day}: {self.start_time} - {self.end_time}'
 
 
 class Booking(models.Model):

@@ -17,7 +17,8 @@ class BookingForm(forms.Form):
         (UNLOAD, 'Descarga'),
     ]
     activity = forms.CharField(label='Actividad a realizar',
-                               choices=ACTIVITIES)
+                               widget=forms.Select(choices=ACTIVITIES)
+                               )
     # Order ID
     order = forms.CharField(label='Número de pedido',
                             max_length=6,

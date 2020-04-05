@@ -5,11 +5,11 @@
         <form method="post">
             {% csrf_token %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Make a reservation</legend>
+                <legend class="border-bottom mb-4">Log in</legend>
                 {{ form|crispy }}
             </fieldset>
             <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Submit</button>
+                <button class="btn btn-outline-info" type="submit">Login</button>
             </div>
         </form>
     </div>
