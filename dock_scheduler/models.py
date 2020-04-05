@@ -62,16 +62,6 @@ class TimeSegment(models.Model):
         return f'D{self.dock.number} | {self.activity} |{self.day}: {self.start_time} - {self.end_time}'
 
 
-class Booking(models.Model):
-    # foreign key
-    time_segment = models.ForeignKey(TimeSegment, on_delete=models.CASCADE)
-    # driver's license plate
-    driver = models.CharField(max_length=15)
-
-    def __str__(self):
-        return f'{self.driver} at {str(self.time_segment)}'
-
-
 class Order(models.Model):
     number = models.CharField(
         primary_key=True,
@@ -81,3 +71,17 @@ class Order(models.Model):
 
     def __str__(self):
         return f'ORDER NO: {self.number}'
+
+
+class Booking(models.Model):
+    # foreign keys
+    time_segment = models.ForeignKey(TimeSegment, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    # driver's license plate
+    driver = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f'{self.driver} at {str(self.time_segment)}'
+
+
+

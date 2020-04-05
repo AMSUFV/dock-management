@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 
 from .forms import BookingForm
@@ -66,8 +67,9 @@ def book(request):
 
             # if errors have been detected
             if len(message) != 0:
-                s = '<br>'
+                s = ', '
                 message = s.join(message)
+                message = message.lower().capitalize() + '.'
                 messages.error(request, message)
 
             # if there were no errors within the form
@@ -79,4 +81,13 @@ def book(request):
 
     else:
         form = BookingForm()
-        return render(request, 'dock_scheduler/book.html', {'form': form, 'title': 'Booking'})
+    return render(request, 'dock_scheduler/book.html', {'form': form, 'title': 'Booking'})
+
+
+@staff_member_required()
+def bookings(request):
+    context = {
+        'bookings': Booking.objects.all(),
+        'title': 'Bookings'
+    }
+    return render(request, 'dock_scheduler/bookings.html', context)

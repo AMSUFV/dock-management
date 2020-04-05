@@ -6,7 +6,8 @@ class BookingForm(forms.Form):
     # Dock number
     dock_number = forms.IntegerField(label='Número de muelle')
     # Booking day and time
-    day = forms.DateField(label='Día')
+    day = forms.DateField(label='Fecha',
+                          help_text='Con formato año-mes-día')
     start_time = forms.TimeField(label='Hora de inicio')
     end_time = forms.TimeField(label='Hora de fin')
     # Activity to perform

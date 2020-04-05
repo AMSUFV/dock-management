@@ -1,0 +1,15 @@
+{% extends "dock_scheduler/base.html" %}
+{% block content %}
+    {% for booking in bookings %}
+	<article class="media content-section">
+	  <div class="media-body">
+	    <div class="article-metadata">
+	      <a class="mr-2" href="#">Driver ID: {{ booking.driver }}</a>
+	      <small class="text-muted">{{ booking.order }}</small>
+	    </div>
+	    <h2><a class="article-title" href="#">{{ booking.time_segment.dock}}</a></h2>
+	    <p class="article-content">{{ booking.time_segment.activity }} | {{ booking.time_segment.start_time }} to {{booking.time_segment.end_time }}</p>
+	  </div>
+	</article>
+    {% endfor %}
+{% endblock content %}
