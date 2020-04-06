@@ -131,10 +131,10 @@ class SearchForm(forms.Form):
     )
 
 
-# class DailySchedule(forms.Form):
-#     # Booking day and time
-#     day = forms.DateField(
-#         label='Date',
-#         help_text='Year-Month-Day format: 2020-03-25'
-#     )
-#     info = forms.FileField(default='schedule.csv', )
+class DailySchedule(forms.Form):
+    # Booking day and time
+    day = forms.DateField(
+        label='Date',
+        help_text='Year-Month-Day format: 2020-03-25'
+    )
+    info = forms.FileField()

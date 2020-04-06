@@ -1,0 +1,23 @@
+{% extends "dock_scheduler/base.html" %}
+{% load crispy_forms_tags %}
+{% block form_block %}
+<div class="col-md-4">
+    <div class="content-section">
+        <form method="post">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Upload a schedule</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock form_block %}
+{% block content %}
+<div class="col-md-8">
+<!--    show uploaded schedule (maybe show existing schedule for today first)   -->
+</div>
+{% endblock content %}

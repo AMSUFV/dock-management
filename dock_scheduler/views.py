@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
+from django.views.generic import DetailView, FormView
+from django.views.generic.detail import SingleObjectMixin
 
 from .forms import *
 from .models import *
@@ -130,3 +132,25 @@ def mybookings(request):
             'title': 'My bookings',
         }
         return render(request, 'dock_scheduler/myreservations.html', context)
+
+
+def scheduleupload(request):
+    context = {
+        'form': DailySchedule(),
+        'title': 'Schedule',
+    }
+    return render(request, 'dock_scheduler/scheduleform.html', context)
+
+
+class ActivityDetailView(DetailView):
+    model = DockActivity
+
+    def get_context_data(self, **kwargs):
+        context = super(ActivityDetailView, self).get_context_data(**kwargs)
+        context['form'] = BookingForm()
+        return context
+
+
+class BookingFormView(FormView):
+    form = BookingForm()
+    success_url = ''

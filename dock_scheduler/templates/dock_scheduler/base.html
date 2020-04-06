@@ -32,6 +32,9 @@
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
+                {% if user|has_group:"Managers" or user.is_superuser %}
+                    <a class="nav-item nav-link" href="{% url 'scheduler-schedule' %}">Upload schedule</a>
+                {% endif %}
                 {% if user.is_staff %}
                     <a class="nav-item nav-link" href="{% url 'admin:index' %}">Administration</a>
                 {% endif %}
