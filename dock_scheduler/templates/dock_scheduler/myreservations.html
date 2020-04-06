@@ -6,30 +6,29 @@
         <form method="post">
             {% csrf_token %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">Find a dock that suits you</legend>
+                <legend class="border-bottom mb-4">Manage your reservation</legend>
                 {{ form|crispy }}
             </fieldset>
             <div class="form-group">
                 <button class="btn btn-outline-info" type="submit">Search</button>
             </div>
-            <small>Know exactly what you want? Book it <a href="{% url 'scheduler-booking' %}">here</a></small>
         </form>
     </div>
 </div>
 {% endblock form_block %}
 {% block content %}
 <div class="col-md-8">
-    {% if activities %}
+    {% if bookings %}
         <ul class="list-group list-group-flush">
-            {% for activity in activities %}
+            {% for booking in bookings %}
                 <a href="#" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ activity.dock }}</h5>
-                        <small>{{ activity.dock.category_verbose }}</small>
+                        <h5 class="mb-1">{{ booking.order }}</h5>
+                        <small>{{ booking.driver }}</small>
                     </div>
                     <div class="d-flex w-100 justify-content-between">
-                        <p class="mb-1">{{ activity.time_segment }}</p>
-                        <small>{{ activity.activity_verbose }}</small>
+                        <p class="mb-1">{{ booking.dock_activity }}</p>
+                        <small>{{ booking.dock_activity.activity_verbose }}</small>
                     </div>
                 </a>
             {% endfor %}
@@ -37,7 +36,7 @@
     {% else %}
     <div class="list-group-item list-group-item-action">
         <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">No docks found</h5>
+            <h5 class="mb-1">No reservations found</h5>
         </div>
     </div>
     {% endif %}

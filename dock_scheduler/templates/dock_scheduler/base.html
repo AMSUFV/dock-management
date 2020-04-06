@@ -28,9 +28,7 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              {% if user|has_group:"Managers" or user.is_superuser %}
-                <a class="nav-item nav-link" href="{% url 'scheduler-bookings' %}">Reservations</a>
-              {% endif %}
+              <a class="nav-item nav-link" href="{% url 'scheduler-mybookings' %}">Find your booking</a>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">

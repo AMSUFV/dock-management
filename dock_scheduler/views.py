@@ -2,18 +2,48 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 
-from .forms import BookingForm, SearchForm
+from .forms import *
 from .models import *
 
 
 def home(request):
-    form = SearchForm()
-    context = {
-        'form': form,
-        'docks': Dock.objects.all(),
-        'title': 'Home',
-    }
-    return render(request, 'dock_scheduler/home.html', context)
+    if request.method == 'POST':
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            # data extraction
+            activity = form.cleaned_data.get('activity')
+            vehicle = form.cleaned_data.get('vehicle')
+            day = form.cleaned_data.get('day')
+            start_time = form.cleaned_data.get('start_time')
+            end_time = form.cleaned_data.get('end_time')
+
+            # initial query for activity and vehicle
+            existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+            ac_ve_query = DockActivity.objects\
+                .exclude(id__in=existing_bookings)\
+                .filter(dock__category=vehicle,
+                        activity=activity)
+
+            # if start time is introduced, we'll show all the segments greater or equal to that one
+            # TODO: Complete this
+
+            context = {
+                'form': form,
+                'activities': ac_ve_query,
+                'title': 'Search',
+            }
+
+            return render(request, 'dock_scheduler/home.html', context)
+    else:
+        existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+        activities = DockActivity.objects.exclude(id__in=existing_bookings)
+        form = SearchForm()
+        context = {
+            'form': form,
+            'activities': activities,
+            'title': 'Home',
+        }
+        return render(request, 'dock_scheduler/home.html', context)
 
 
 def book(request):
@@ -70,10 +100,33 @@ def book(request):
     return render(request, 'dock_scheduler/book.html', {'form': form, 'title': 'Booking'})
 
 
-@staff_member_required()
-def bookings(request):
-    context = {
-        'bookings': Booking.objects.all(),
-        'title': 'Bookings'
-    }
-    return render(request, 'dock_scheduler/bookings.html', context)
+# @staff_member_required()
+# def bookings(request):
+#     context = {
+#         'bookings': Booking.objects.all(),
+#         'title': 'Bookings'
+#     }
+#     return render(request, 'dock_scheduler/.html', context)
+
+
+def mybookings(request):
+    if request.method == 'POST':
+        form = BookingManagement(request.POST)
+        if form.is_valid():
+            driver = form.cleaned_data.get('driver')
+            order = form.cleaned_data.get('order')
+            reservation = Booking.objects.filter(driver=driver, order__pk=order)
+
+            context = {
+                'form': form,
+                'bookings': reservation,
+                'title': 'My bookings',
+            }
+            return render(request, 'dock_scheduler/myreservations.html', context)
+    else:
+        context = {
+            'form': BookingManagement(),
+            'bookings': None,
+            'title': 'My bookings',
+        }
+        return render(request, 'dock_scheduler/myreservations.html', context)

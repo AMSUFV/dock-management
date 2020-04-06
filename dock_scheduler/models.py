@@ -8,7 +8,7 @@ class Dock(models.Model):
     TRAILER = 'TR'
     VAN = 'VA'
     TARPAULIN = 'CA'
-    DOCK_TYPE_CHOICES = [
+    DOCK_CATEGORY_CHOICES = [
         (TRAILER, 'Trailer'),
         (VAN, 'Van'),
         (TARPAULIN, 'Tarpaulin truck'),
@@ -27,7 +27,7 @@ class Dock(models.Model):
     )
     category = models.CharField(
         max_length=2,
-        choices=DOCK_TYPE_CHOICES,
+        choices=DOCK_CATEGORY_CHOICES,
         default=TRAILER,
     )
     state = models.CharField(
@@ -36,11 +36,17 @@ class Dock(models.Model):
         default=FREE,
     )
 
-    class Meta:
-        ordering = ['number']
-
     def __str__(self):
         return f'Dock {self.number}'
+
+    def category_verbose(self):
+        return dict(Dock.DOCK_CATEGORY_CHOICES)[self.category]
+
+    def state_verbose(self):
+        return dict(Dock.DOCK_STATE_CHOICES)[self.state]
+
+    class Meta:
+        ordering = ['number']
 
 
 class TimeSegment(models.Model):
@@ -91,7 +97,10 @@ class DockActivity(models.Model):
         choices=ACTIVITIES)
 
     def __str__(self):
-        return f'{self.dock} | {self.time_segment} | {self.activity}'
+        return f'{self.dock} | {self.time_segment} | {self.activity_verbose()}'
+
+    def activity_verbose(self):
+        return dict(DockActivity.ACTIVITIES)[self.activity]
 
     class Meta:
         verbose_name_plural = 'Dock activities'
@@ -132,6 +141,3 @@ class Booking(models.Model):
 
     def __str__(self):
         return f'{self.driver} at {str(self.dock_activity)}'
-
-
-

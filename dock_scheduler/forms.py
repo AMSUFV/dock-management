@@ -2,13 +2,14 @@ from django import forms
 from django.core.validators import RegexValidator
 
 
+# TODO: check that the day must be greater or equal than today
 class BookingForm(forms.Form):
     # Activity to perform
     LOAD = 'CA'
     UNLOAD = 'DE'
     ACTIVITIES = [
-        (LOAD, 'Carga'),
-        (UNLOAD, 'Descarga'),
+        (LOAD, 'Load'),
+        (UNLOAD, 'Unload'),
     ]
 
     # vehicle type
@@ -21,42 +22,48 @@ class BookingForm(forms.Form):
         (TARPAULIN, 'Tarpaulin truck'),
     ]
 
-    # Dock number
-    dock_number = forms.IntegerField(
-        label='Número de muelle',
-        min_value=0)
-
-    # Booking day and time
-    day = forms.DateField(
-        label='Fecha',
-        help_text='Con formato año-mes-día. Ej: (2020-03-25)'
-    )
-    start_time = forms.TimeField(label='Hora de inicio')
-    end_time = forms.TimeField(label='Hora de fin')
-
-    # Activity to perform
-    activity = forms.CharField(
-        label='Actividad a realizar',
-        widget=forms.Select(choices=ACTIVITIES)
-    )
-
     # Vehicle tu use
     vehicle = forms.CharField(
-        label='Vehículo',
+        label='Vehicle',
         widget=forms.Select(choices=DOCK_TYPE_CHOICES)
-    )
-
-    # Order ID
-    order = forms.CharField(
-        label='Número de pedido',
-        max_length=6,
-        validators=[RegexValidator(r'^\d{1,10}$')]
     )
 
     # Driver's license plate
     driver = forms.CharField(
-        label='Matrícula',
+        label='License plate',
         max_length=15,
+    )
+
+    # Activity to perform
+    activity = forms.CharField(
+        label='Activity',
+        widget=forms.Select(choices=ACTIVITIES)
+    )
+
+    # Order ID
+    order = forms.CharField(
+        label='Order number',
+        max_length=6,
+        validators=[RegexValidator(r'^\d{1,10}$')]
+    )
+
+    # Dock number
+    dock_number = forms.IntegerField(
+        label='Dock number',
+        min_value=0)
+
+    # Booking day and time
+    day = forms.DateField(
+        label='Date',
+        help_text='Year-Month-Day format: 2020-03-25'
+    )
+    start_time = forms.TimeField(
+        label='Start time',
+        help_text='Hour:Minute format: 14:30',
+    )
+    end_time = forms.TimeField(
+        label='End time',
+        help_text='Hour:Minute format: 14:30',
     )
 
 
@@ -64,13 +71,13 @@ class BookingForm(forms.Form):
 class BookingManagement(forms.Form):
     # Driver's license plate
     driver = forms.CharField(
-        label='Matrícula',
+        label='License plate',
         max_length=15,
     )
 
     # Order ID
     order = forms.CharField(
-        label='Número de pedido',
+        label='Order number',
         max_length=6,
         validators=[RegexValidator(r'^\d{1,10}$')],
     )
@@ -81,8 +88,8 @@ class SearchForm(forms.Form):
     LOAD = 'CA'
     UNLOAD = 'DE'
     ACTIVITIES = [
-        (LOAD, 'Carga'),
-        (UNLOAD, 'Descarga'),
+        (LOAD, 'Load'),
+        (UNLOAD, 'Unload'),
     ]
 
     # vehicle type
@@ -95,29 +102,39 @@ class SearchForm(forms.Form):
         (TARPAULIN, 'Tarpaulin truck'),
     ]
 
-    activity = forms.CharField(
-        label='Actividad a realizar',
-        widget=forms.Select(choices=ACTIVITIES)
+    # Vehicle
+    vehicle = forms.CharField(
+        label='Vehicle',
+        widget=forms.Select(choices=DOCK_TYPE_CHOICES)
     )
 
-    # Vehicle tu use
-    vehicle = forms.CharField(
-        label='Vehículo',
-        widget=forms.Select(choices=DOCK_TYPE_CHOICES)
+    activity = forms.CharField(
+        label='Activity',
+        widget=forms.Select(choices=ACTIVITIES),
     )
 
     # Booking day and time
     day = forms.DateField(
-        label='Fecha',
-        help_text='Con formato año-mes-día. Ej: (2020-03-25)',
+        label='Date',
+        help_text='Year-Month-Day format: 2020-03-25',
         required=False,
     )
     start_time = forms.TimeField(
         label='Start time',
+        help_text='Hour:Minute format: 14:30',
         required=False,
     )
     end_time = forms.TimeField(
         label='End time',
-        required='False',
+        help_text='Hour:Minute format: 15:30',
+        required=False,
     )
 
+
+# class DailySchedule(forms.Form):
+#     # Booking day and time
+#     day = forms.DateField(
+#         label='Date',
+#         help_text='Year-Month-Day format: 2020-03-25'
+#     )
+#     info = forms.FileField(default='schedule.csv', )
