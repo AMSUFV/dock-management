@@ -238,16 +238,20 @@ class DetailView(View):
             order_query = Order.objects.filter(number=order)
             if len(order_query) > 0:
                 order = order_query.first()
+                # if there are no orders with that number already booked:
+                if len(Booking.objects.filter(order=order)) == 0:
+                    new_booking = Booking(
+                        dock_activity=dock_activity,
+                        order=order,
+                        driver=driver,
+                    )
 
-                new_booking = Booking(
-                    dock_activity=dock_activity,
-                    order=order,
-                    driver=driver,
-                )
+                    messages.success(request, 'Booked!')
+                    new_booking.save()
 
-                messages.success(request, 'Booked!')
-                new_booking.save()
-
-                return redirect('scheduler-home')
+                    return redirect('scheduler-home')
+                else:
+                    messages.warning(request, 'Order already booked')
             else:
-                message = messages.error(request, 'Order not found')
+                messages.warning(request, 'Order not found')
+            return redirect('activity-detail', pk=self.kwargs['pk'])

@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
-
+from django.urls import reverse
 
 class Dock(models.Model):
     # dock type
@@ -141,3 +141,6 @@ class Booking(models.Model):
 
     def __str__(self):
         return f'{self.driver} at {str(self.dock_activity)}'
+
+    def get_absolute_url(self):
+        return reverse('activity-detail', kwargs={'pk': self.pk})
