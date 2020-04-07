@@ -94,8 +94,8 @@ class BookingManagement(forms.Form):
 
 class SearchForm(forms.Form):
     # Activity to perform
-    LOAD = 'CA'
-    UNLOAD = 'DE'
+    LOAD = 'LO'
+    UNLOAD = 'UL'
     ACTIVITIES = [
         (LOAD, 'Load'),
         (UNLOAD, 'Unload'),
@@ -104,7 +104,7 @@ class SearchForm(forms.Form):
     # vehicle type
     TRAILER = 'TR'
     VAN = 'VA'
-    TARPAULIN = 'CA'
+    TARPAULIN = 'TT'
     DOCK_TYPE_CHOICES = [
         (TRAILER, 'Trailer'),
         (VAN, 'Van'),
@@ -163,4 +163,4 @@ class DailySchedule(forms.Form):
         label='Date',
         help_text='Year-Month-Day format: 2020-03-25'
     )
-    info = forms.FileField()
+    schedule = forms.FileField()

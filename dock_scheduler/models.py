@@ -8,7 +8,7 @@ class Dock(models.Model):
     # dock type
     TRAILER = 'TR'
     VAN = 'VA'
-    TARPAULIN = 'CA'
+    TARPAULIN = 'TT'
     DOCK_CATEGORY_CHOICES = [
         (TRAILER, 'Trailer'),
         (VAN, 'Van'),
@@ -84,9 +84,9 @@ class DockActivity(models.Model):
     )
 
     # activity
-    LOAD = 'CA'
-    UNLOAD = 'DE'
-    UNAVAILABLE = 'ND'
+    LOAD = 'LO'
+    UNLOAD = 'UL'
+    UNAVAILABLE = 'UA'
     ACTIVITIES = [
         (LOAD, 'Load'),
         (UNLOAD, 'Unload'),

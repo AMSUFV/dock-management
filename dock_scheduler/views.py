@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from .forms import *
 from .models import *
+from .utils.csv_parser import handle_file
 
 
 def home(request):
@@ -188,7 +189,16 @@ def scheduleupload(request):
         'form': DailySchedule(),
         'title': 'Schedule',
     }
-    return render(request, 'dock_scheduler/scheduleform.html', context)
+    if request.method == 'POST':
+        form = DailySchedule(request.POST, request.FILES)
+        if form.is_valid():
+            day = form.cleaned_data.get('day')
+            handle_file(request.FILES['schedule'], day)
+        else:
+            messages.warning(request, 'Invalid file')
+            return render(request, 'dock_scheduler/scheduleform.html', context)
+    else:
+        return render(request, 'dock_scheduler/scheduleform.html', context)
 
 
 class ActivityDetailView(DetailView):
