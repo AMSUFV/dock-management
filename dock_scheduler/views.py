@@ -39,6 +39,17 @@ def home(request):
             }
 
             return render(request, 'dock_scheduler/home.html', context)
+        else:
+            existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+            activities = DockActivity.objects.exclude(id__in=existing_bookings)
+            messages.warning(request, 'Check your form for mistakes')
+            context = {
+                'form': form,
+                'activities': activities,
+                'title': 'Search',
+            }
+            return render(request, 'dock_scheduler/home.html', context)
+
     else:
         existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
         activities = DockActivity.objects.exclude(id__in=existing_bookings)
@@ -51,64 +62,64 @@ def home(request):
         return render(request, 'dock_scheduler/home.html', context)
 
 
-def book(request):
-    if request.method == 'POST':
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            # data extraction
-            dock_number = form.cleaned_data.get('dock_number')
-            day = form.cleaned_data.get('day')
-            start_time = form.cleaned_data.get('start_time')
-            end_time = form.cleaned_data.get('end_time')
-            activity = form.cleaned_data.get('activity')
-            order = form.cleaned_data.get('order')
-            driver = form.cleaned_data.get('driver')
-
-            # checking for availability and errors
-            error_message = 'The following problems were detected: <br>'
-            message = []
-            # invalid order number
-            if len(Order.objects.filter(number=order)) == 0:
-                message.append('No order associated to that number')
-            # invalid dock number
-            if len(Dock.objects.filter(number=dock_number)) == 0:
-                message.append("The dock solicited doesn't exist")
-            # no time segment corresponding to the one solicited
-            ts_query = TimeSegment.objects.filter(dock__number=dock_number,
-                                                  day=day,
-                                                  start_time=start_time,
-                                                  end_time=end_time,
-                                                  activity=activity)
-            if len(ts_query) == 0:
-                message.append('Zero matching time segments')
-
-            # time segment already booked
-            if len(Booking.objects.filter(time_segment=ts_query.first())):
-                message.append('Time segment already booked')
-
-            # if errors have been detected
-            if len(message) != 0:
-                s = ', '
-                message = s.join(message)
-                message = message.lower().capitalize() + '.'
-                messages.error(request, message)
-
-            # if there were no errors within the form
-            else:
-                new_booking = Booking(
-                    time_segment=ts_query.first(),
-                    driver=driver,
-                    order=order,
-                )
-                new_booking.save()
-
-                messages.success(request, 'Booked!')
-
-                return redirect('scheduler-home')
-
-    else:
-        form = BookingForm()
-    return render(request, 'dock_scheduler/book.html', {'form': form, 'title': 'Booking'})
+# def book(request):
+#     if request.method == 'POST':
+#         form = BookingForm(request.POST)
+#         if form.is_valid():
+#             # data extraction
+#             dock_number = form.cleaned_data.get('dock_number')
+#             day = form.cleaned_data.get('day')
+#             start_time = form.cleaned_data.get('start_time')
+#             end_time = form.cleaned_data.get('end_time')
+#             activity = form.cleaned_data.get('activity')
+#             order = form.cleaned_data.get('order')
+#             driver = form.cleaned_data.get('driver')
+#
+#             # checking for availability and errors
+#             error_message = 'The following problems were detected: <br>'
+#             message = []
+#             # invalid order number
+#             if len(Order.objects.filter(number=order)) == 0:
+#                 message.append('No order associated to that number')
+#             # invalid dock number
+#             if len(Dock.objects.filter(number=dock_number)) == 0:
+#                 message.append("The dock solicited doesn't exist")
+#             # no time segment corresponding to the one solicited
+#             ts_query = TimeSegment.objects.filter(dock__number=dock_number,
+#                                                   day=day,
+#                                                   start_time=start_time,
+#                                                   end_time=end_time,
+#                                                   activity=activity)
+#             if len(ts_query) == 0:
+#                 message.append('Zero matching time segments')
+#
+#             # time segment already booked
+#             if len(Booking.objects.filter(time_segment=ts_query.first())):
+#                 message.append('Time segment already booked')
+#
+#             # if errors have been detected
+#             if len(message) != 0:
+#                 s = ', '
+#                 message = s.join(message)
+#                 message = message.lower().capitalize() + '.'
+#                 messages.error(request, message)
+#
+#             # if there were no errors within the form
+#             else:
+#                 new_booking = Booking(
+#                     time_segment=ts_query.first(),
+#                     driver=driver,
+#                     order=order,
+#                 )
+#                 new_booking.save()
+#
+#                 messages.success(request, 'Booked!')
+#
+#                 return redirect('scheduler-home')
+#
+#     else:
+#         form = BookingForm()
+#     return render(request, 'dock_scheduler/book.html', {'form': form, 'title': 'Booking'})
 
 
 # @staff_member_required()

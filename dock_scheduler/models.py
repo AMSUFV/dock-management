@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.urls import reverse
 
+
 class Dock(models.Model):
     # dock type
     TRAILER = 'TR'
@@ -57,7 +58,6 @@ class TimeSegment(models.Model):
     def __str__(self):
         return f'{self.day}, {self.start_time} - {self.end_time}'
 
-    # TODO: add validator so segments from the same day can't overlap
     def clean(self):
         # making sure that the time slice makes sense
         if self.start_time > self.end_time:

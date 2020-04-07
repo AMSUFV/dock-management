@@ -1,5 +1,6 @@
 from django import forms
 from django.core.validators import RegexValidator
+import datetime
 
 
 # TODO: check that the day must be greater or equal than today
@@ -69,17 +70,17 @@ class BookingForm(forms.Form):
 
 # Form used to consult and delete the reservation
 class BookingManagement(forms.Form):
-    # Driver's license plate
-    driver = forms.CharField(
-        label='License plate',
-        max_length=15,
-    )
-
     # Order ID
     order = forms.CharField(
         label='Order number',
         max_length=6,
         validators=[RegexValidator(r'^\d{1,10}$')],
+    )
+
+    # Driver's license plate
+    driver = forms.CharField(
+        label='License plate',
+        max_length=15,
     )
 
 
@@ -129,6 +130,23 @@ class SearchForm(forms.Form):
         help_text='Hour:Minute format: 15:30',
         required=False,
     )
+
+    def clean_day(self):
+        reservation_day = self.cleaned_data['day']
+
+        if reservation_day is not None:
+            if reservation_day < datetime.date.today():
+                raise forms.ValidationError("You can't go back to the past McFly!")
+
+        return reservation_day
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+        if start_time is not None and end_time is not None:
+            if start_time > end_time:
+                raise forms.ValidationError({'start_time': 'Start time happens after end time'})
 
 
 class DailySchedule(forms.Form):
