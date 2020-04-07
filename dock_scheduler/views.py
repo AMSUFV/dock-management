@@ -1,11 +1,10 @@
+import datetime
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import DetailView, FormView
-from django.views.generic.detail import SingleObjectMixin
-from django.urls import reverse
 
 from .forms import *
 from .models import *
@@ -71,7 +70,8 @@ def home(request):
 
     else:
         existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
-        activities = DockActivity.objects.exclude(id__in=existing_bookings)
+        activities = DockActivity.objects.exclude(id__in=existing_bookings)\
+            .filter(time_segment__day=datetime.date.today())
         form = SearchForm()
         context = {
             'form': form,
@@ -79,66 +79,6 @@ def home(request):
             'title': 'Home',
         }
         return render(request, 'dock_scheduler/home.html', context)
-
-
-# def book(request):
-#     if request.method == 'POST':
-#         form = BookingForm(request.POST)
-#         if form.is_valid():
-#             # data extraction
-#             dock_number = form.cleaned_data.get('dock_number')
-#             day = form.cleaned_data.get('day')
-#             start_time = form.cleaned_data.get('start_time')
-#             end_time = form.cleaned_data.get('end_time')
-#             activity = form.cleaned_data.get('activity')
-#             order = form.cleaned_data.get('order')
-#             driver = form.cleaned_data.get('driver')
-#
-#             # checking for availability and errors
-#             error_message = 'The following problems were detected: <br>'
-#             message = []
-#             # invalid order number
-#             if len(Order.objects.filter(number=order)) == 0:
-#                 message.append('No order associated to that number')
-#             # invalid dock number
-#             if len(Dock.objects.filter(number=dock_number)) == 0:
-#                 message.append("The dock solicited doesn't exist")
-#             # no time segment corresponding to the one solicited
-#             ts_query = TimeSegment.objects.filter(dock__number=dock_number,
-#                                                   day=day,
-#                                                   start_time=start_time,
-#                                                   end_time=end_time,
-#                                                   activity=activity)
-#             if len(ts_query) == 0:
-#                 message.append('Zero matching time segments')
-#
-#             # time segment already booked
-#             if len(Booking.objects.filter(time_segment=ts_query.first())):
-#                 message.append('Time segment already booked')
-#
-#             # if errors have been detected
-#             if len(message) != 0:
-#                 s = ', '
-#                 message = s.join(message)
-#                 message = message.lower().capitalize() + '.'
-#                 messages.error(request, message)
-#
-#             # if there were no errors within the form
-#             else:
-#                 new_booking = Booking(
-#                     time_segment=ts_query.first(),
-#                     driver=driver,
-#                     order=order,
-#                 )
-#                 new_booking.save()
-#
-#                 messages.success(request, 'Booked!')
-#
-#                 return redirect('scheduler-home')
-#
-#     else:
-#         form = BookingForm()
-#     return render(request, 'dock_scheduler/book.html', {'form': form, 'title': 'Booking'})
 
 
 # @staff_member_required()
@@ -189,13 +129,37 @@ def scheduleupload(request):
         'form': DailySchedule(),
         'title': 'Schedule',
     }
+    # get today's date and schedule
+    today = datetime.date.today()
+    segments = TimeSegment.objects.filter(day=today)
+    today_activities = DockActivity.objects.filter(time_segment__day=today)
+    docks = Dock.objects.filter(number__in=today_activities)
+
+    daily_schedules = []
+    for i, dock in enumerate(docks):
+        activities = today_activities.filter(dock__number=dock.number)
+        daily_schedule = [dock.number, dock.category]
+        for activity in activities:
+            daily_schedule.append(activity.activity)
+        daily_schedules.append(daily_schedule)
+
+    context['segments'] = segments
+    context['daily_schedules'] = daily_schedules
+
     if request.method == 'POST':
+
         form = DailySchedule(request.POST, request.FILES)
         if form.is_valid():
             day = form.cleaned_data.get('day')
             handle_file(request.FILES['schedule'], day)
+
+            messages.success(request, 'Schedule added!')
+
+            return render(request, 'dock_scheduler/scheduleform.html', context)
+
         else:
-            messages.warning(request, 'Invalid file')
+            messages.warning(request, 'Check the form for errors')
+            context['form'] = form
             return render(request, 'dock_scheduler/scheduleform.html', context)
     else:
         return render(request, 'dock_scheduler/scheduleform.html', context)

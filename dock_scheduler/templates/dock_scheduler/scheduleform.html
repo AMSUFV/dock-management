@@ -19,5 +19,25 @@
 {% block content %}
 <div class="col-md-8">
 <!--    show uploaded schedule (maybe show existing schedule for today first)   -->
+    {% if segments and daily_schedules %}
+        <table class="table">
+            <thead>
+            <th scope="col">Dock</th>
+            <th scope="col">Vehicle</th>
+            {% for segment in segments %}
+                <th scope="col">{{ segment.start_time|time:"H:i" }} - {{ segment.end_time|time:"H:i" }}</th>
+            {% endfor %}
+            </thead>
+            <tbody>
+                {% for schedule in daily_schedules %}
+                <tr>
+                    {% for value in schedule %}
+                    <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif%}
 </div>
 {% endblock content %}
