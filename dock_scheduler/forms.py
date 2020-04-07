@@ -22,10 +22,11 @@ class BookingForm(forms.Form):
         (TARPAULIN, 'Tarpaulin truck'),
     ]
 
-    # Vehicle tu use
-    vehicle = forms.CharField(
-        label='Vehicle',
-        widget=forms.Select(choices=DOCK_TYPE_CHOICES)
+    # Order ID
+    order = forms.CharField(
+        label='Order number',
+        max_length=6,
+        validators=[RegexValidator(r'^\d{1,10}$')]
     )
 
     # Driver's license plate
@@ -34,17 +35,16 @@ class BookingForm(forms.Form):
         max_length=15,
     )
 
+    # Vehicle tu use
+    vehicle = forms.CharField(
+        label='Vehicle',
+        widget=forms.Select(choices=DOCK_TYPE_CHOICES)
+    )
+
     # Activity to perform
     activity = forms.CharField(
         label='Activity',
         widget=forms.Select(choices=ACTIVITIES)
-    )
-
-    # Order ID
-    order = forms.CharField(
-        label='Order number',
-        max_length=6,
-        validators=[RegexValidator(r'^\d{1,10}$')]
     )
 
     # Dock number

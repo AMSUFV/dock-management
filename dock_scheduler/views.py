@@ -1,8 +1,11 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
+from django.views import View
 from django.views.generic import DetailView, FormView
 from django.views.generic.detail import SingleObjectMixin
+from django.urls import reverse
 
 from .forms import *
 from .models import *
@@ -92,9 +95,15 @@ def book(request):
 
             # if there were no errors within the form
             else:
-                new_booking = Booking(time_segment=ts_query.first(), driver=driver)
+                new_booking = Booking(
+                    time_segment=ts_query.first(),
+                    driver=driver,
+                    order=order,
+                )
                 new_booking.save()
+
                 messages.success(request, 'Booked!')
+
                 return redirect('scheduler-home')
 
     else:
@@ -147,10 +156,98 @@ class ActivityDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(ActivityDetailView, self).get_context_data(**kwargs)
-        context['form'] = BookingForm()
+
+        # populating the form
+        current_activity = DockActivity.objects.filter(id=self.kwargs['pk']).first()
+        form = BookingForm(initial={
+            'vehicle': current_activity.dock.category,
+            'activity': current_activity.activity,
+            'dock_number': current_activity.dock.number,
+            'day': current_activity.time_segment.day,
+            'start_time': current_activity.time_segment.start_time,
+            'end_time': current_activity.time_segment.end_time,
+        })
+        # hiding fields
+        form.fields['vehicle'].widget = forms.HiddenInput()
+        form.fields['activity'].widget = forms.HiddenInput()
+        form.fields['dock_number'].widget = forms.HiddenInput()
+        form.fields['day'].widget = forms.HiddenInput()
+        form.fields['start_time'].widget = forms.HiddenInput()
+        form.fields['end_time'].widget = forms.HiddenInput()
+
+        context['form'] = form
+
         return context
 
 
 class BookingFormView(FormView):
-    form = BookingForm()
-    success_url = ''
+    form = BookingForm
+
+    def form_valid(self, form):
+        dock_number = form.cleaned_data.get('dock_number')
+        day = form.cleaned_data.get('day')
+        start_time = form.cleaned_data.get('start_time')
+        end_time = form.cleaned_data.get('end_time')
+        activity = form.cleaned_data.get('activity')
+        order = form.cleaned_data.get('order')
+        driver = form.cleaned_data.get('driver')
+
+        ts_query = TimeSegment.objects.filter(dock__number=dock_number,
+                                              day=day,
+                                              start_time=start_time,
+                                              end_time=end_time,
+                                              activity=activity).first()
+
+        new_booking = Booking(
+            time_segment=ts_query,
+            driver=driver,
+            order=order)
+
+        new_booking.save()
+
+
+class DetailView(View):
+
+    def get(self, request, *args, **kwargs):
+        view = ActivityDetailView.as_view()
+        return view(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            dock_number = form.cleaned_data.get('dock_number')
+            day = form.cleaned_data.get('day')
+            start_time = form.cleaned_data.get('start_time')
+            end_time = form.cleaned_data.get('end_time')
+            activity = form.cleaned_data.get('activity')
+            order = form.cleaned_data.get('order')
+            driver = form.cleaned_data.get('driver')
+
+            time_segment = TimeSegment.objects.filter(
+                day=day,
+                start_time=start_time,
+                end_time=end_time
+            ).first()
+
+            dock_activity = DockActivity.objects.filter(
+                dock__number=dock_number,
+                time_segment=time_segment,
+                activity=activity,
+            ).first()
+
+            order_query = Order.objects.filter(number=order)
+            if len(order_query) > 0:
+                order = order_query.first()
+
+                new_booking = Booking(
+                    dock_activity=dock_activity,
+                    order=order,
+                    driver=driver,
+                )
+
+                messages.success(request, 'Booked!')
+                new_booking.save()
+
+                return redirect('scheduler-home')
+            else:
+                message = messages.error(request, 'Order not found')
