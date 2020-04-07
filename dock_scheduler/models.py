@@ -113,7 +113,7 @@ class Order(models.Model):
     number = models.CharField(
         primary_key=True,
         max_length=6,
-        validators=[RegexValidator(r'^\d{1,10}$')],
+        validators=[RegexValidator(r'^\d{1,6}$', 'Order can only contain numbers.')],
     )
 
     def __str__(self):
@@ -136,7 +136,8 @@ class Booking(models.Model):
 
     # driver's license plate
     driver = models.CharField(
-        max_length=15
+        max_length=15,
+        validators=[RegexValidator(r'^\w{1,15}$', 'License plate can only contain numbers and letters.')]
     )
 
     def __str__(self):

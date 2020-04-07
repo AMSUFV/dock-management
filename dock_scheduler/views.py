@@ -24,13 +24,31 @@ def home(request):
 
             # initial query for activity and vehicle
             existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
-            ac_ve_query = DockActivity.objects\
-                .exclude(id__in=existing_bookings)\
+            ac_ve_query = DockActivity.objects \
+                .exclude(id__in=existing_bookings) \
                 .filter(dock__category=vehicle,
                         activity=activity)
 
+            if day is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__day=day
+                )
+            # if both times are supplied, we'll do an exact query
+            if start_time is not None and end_time is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__start_time=start_time,
+                    time_segment__end_time=end_time,
+                )
             # if start time is introduced, we'll show all the segments greater or equal to that one
-            # TODO: Complete this
+            elif start_time is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__start_time__gte=start_time,
+                )
+            # if end time is introduced, we'll show all the segments less than or equal to that one
+            elif end_time is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__end_time__lte=end_time,
+                )
 
             context = {
                 'form': form,
@@ -132,6 +150,10 @@ def home(request):
 
 
 def mybookings(request):
+    context = {
+        'form': BookingManagement(),
+        'title': 'My bookings',
+    }
     if request.method == 'POST':
         form = BookingManagement(request.POST)
         if form.is_valid():
@@ -142,15 +164,22 @@ def mybookings(request):
             context = {
                 'form': form,
                 'bookings': reservation,
-                'title': 'My bookings',
+                'title': 'Results',
             }
+
+            if len(reservation) == 0:
+                messages.warning(request, 'No matching bookings')
+                return render(request, 'dock_scheduler/myreservations.html', context)
+
+            else:
+                return render(request, 'dock_scheduler/myreservations.html', context)
+        else:
+            # if the form is not valid
+            context['form'] = form
+            context['title'] = 'Error'
             return render(request, 'dock_scheduler/myreservations.html', context)
+
     else:
-        context = {
-            'form': BookingManagement(),
-            'bookings': None,
-            'title': 'My bookings',
-        }
         return render(request, 'dock_scheduler/myreservations.html', context)
 
 
@@ -265,4 +294,7 @@ class DetailView(View):
                     messages.warning(request, 'Order already booked')
             else:
                 messages.warning(request, 'Order not found')
+            return redirect('activity-detail', pk=self.kwargs['pk'])
+        else:
+            messages.warning(request, 'Enter a valid order and license plate')
             return redirect('activity-detail', pk=self.kwargs['pk'])

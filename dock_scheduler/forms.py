@@ -26,6 +26,7 @@ class BookingForm(forms.Form):
     # Order ID
     order = forms.CharField(
         label='Order number',
+        min_length=6,
         max_length=6,
         validators=[RegexValidator(r'^\d{1,10}$')]
     )
@@ -73,15 +74,22 @@ class BookingManagement(forms.Form):
     # Order ID
     order = forms.CharField(
         label='Order number',
+        min_length=6,
         max_length=6,
-        validators=[RegexValidator(r'^\d{1,10}$')],
+        validators=[RegexValidator(r'^\d{1,6}$', 'Order can only contain numbers.')],
     )
 
     # Driver's license plate
     driver = forms.CharField(
         label='License plate',
         max_length=15,
+        validators=[RegexValidator(r'^\w{1,15}$', 'License plate can only contain numbers and letters.')]
     )
+
+    def clean_driver(self):
+        driver = self.cleaned_data['driver']
+        driver = driver.upper()
+        return driver
 
 
 class SearchForm(forms.Form):
