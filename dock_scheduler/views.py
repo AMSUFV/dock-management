@@ -11,6 +11,8 @@ from .models import *
 from .utils.csv_parser import handle_file
 
 
+# TODO: add load or unload field for orders and add the logic for the reservations
+# TODO: add delete to the bookings
 def home(request):
     if request.method == 'POST':
         form = SearchForm(request.POST)
@@ -133,7 +135,8 @@ def scheduleupload(request):
     today = datetime.date.today()
     segments = TimeSegment.objects.filter(day=today)
     today_activities = DockActivity.objects.filter(time_segment__day=today)
-    docks = Dock.objects.filter(number__in=today_activities)
+    numbers = today_activities.order_by().values_list('dock', flat=True).distinct()
+    docks = Dock.objects.filter(number__in=numbers)
 
     daily_schedules = []
     for i, dock in enumerate(docks):
@@ -151,6 +154,11 @@ def scheduleupload(request):
         form = DailySchedule(request.POST, request.FILES)
         if form.is_valid():
             day = form.cleaned_data.get('day')
+
+            if len(today_activities):
+                messages.warning(request, 'A schedule for this day already exists.')
+                return render(request, 'dock_scheduler/scheduleform.html', context)
+
             handle_file(request.FILES['schedule'], day)
 
             messages.success(request, 'Schedule added!')

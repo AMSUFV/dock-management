@@ -117,7 +117,7 @@ class Order(models.Model):
     )
 
     def __str__(self):
-        return f'ORDER: {self.number}'
+        return f'{self.number}'
 
 
 class Booking(models.Model):

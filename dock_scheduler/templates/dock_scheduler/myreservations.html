@@ -23,12 +23,12 @@
             {% for booking in bookings %}
                 <a href="#" class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ booking.order }}</h5>
+                        <h5 class="mb-1">Order: {{ booking.order }}</h5>
                         <small>{{ booking.driver }}</small>
                     </div>
                     <div class="d-flex w-100 justify-content-between">
                         <p class="mb-1">{{ booking.dock_activity }}</p>
-                        <small>{{ booking.dock_activity.activity_verbose }}</small>
+<!--                        <small>{{ booking.dock_activity.activity_verbose }}</small>-->
                     </div>
                 </a>
             {% endfor %}

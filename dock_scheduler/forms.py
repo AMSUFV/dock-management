@@ -167,7 +167,6 @@ class DailySchedule(forms.Form):
 
     def clean_day(self):
         day = self.cleaned_data['day']
-        if day == datetime.date.today():
-            raise forms.ValidationError('An schedule for this day already exists.')
-        elif day < datetime.date.today():
+        if day < datetime.date.today():
             raise forms.ValidationError("Can't set a schedule for the past.")
+        return day
