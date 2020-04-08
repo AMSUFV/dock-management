@@ -2,17 +2,26 @@ import datetime
 from dock_scheduler.models import Dock, TimeSegment, DockActivity
 
 
-def handle_file(f, day):
+def handle_schedule(f, day, name='schedule.csv'):
 
-    route = 'dock_scheduler/static/dock_scheduler/schedule.csv'
-    with open(route, 'wb+') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
+    route = f'dock_scheduler/static/dock_scheduler/{name}'
+    preprocess(f, route)
 
     docks, segments, activities = parse(route)
     cu_docks(docks)
     cu_segments(segments, day)
     cu_activities(activities, day)
+
+
+def handle_orders(f, name='orders.csv'):
+    route = f'dock_scheduler/static/dock_scheduler/{name}'
+    preprocess(f, route)
+
+
+def preprocess(file, route):
+    with open(route, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
 
 
 def cu_docks(docks):
@@ -111,3 +120,7 @@ def parse(file_name):
                     activities.append(dict(dock_number=dock_number, time_segment=segment, activity=activity))
 
     return docks, segments, activities
+
+
+def parse_orders(file_name):
+    pass

@@ -116,6 +116,17 @@ class Order(models.Model):
         validators=[RegexValidator(r'^\d{1,6}$', 'Order can only contain numbers.')],
     )
 
+    # activity
+    LOAD = 'LO'
+    UNLOAD = 'UL'
+    ACTIVITIES = [
+        (LOAD, 'Load'),
+        (UNLOAD, 'Unload'),
+    ]
+    activity = models.CharField(
+        max_length=2,
+        choices=ACTIVITIES)
+
     def __str__(self):
         return f'{self.number}'
 

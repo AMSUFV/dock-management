@@ -8,12 +8,18 @@ from django.views.generic import DetailView, FormView, DeleteView
 
 from .forms import *
 from .models import *
-from .utils.csv_parser import handle_file
+from .utils.csv_parser import handle_schedule
 
 
 # TODO: add load or unload field for orders and add the logic for the reservations
-# TODO: add delete to the bookings
 def home(request):
+    unavailable = DockActivity.objects.filter(activity='UA')
+    existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+
+    activities = DockActivity.objects \
+        .exclude(id__in=existing_bookings) \
+        .exclude(id__in=unavailable)
+
     if request.method == 'POST':
         form = SearchForm(request.POST)
         if form.is_valid():
@@ -25,9 +31,9 @@ def home(request):
             end_time = form.cleaned_data.get('end_time')
 
             # initial query for activity and vehicle
-            existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
             ac_ve_query = DockActivity.objects \
                 .exclude(id__in=existing_bookings) \
+                .exclude(id__in=unavailable) \
                 .filter(dock__category=vehicle,
                         activity=activity)
 
@@ -60,8 +66,6 @@ def home(request):
 
             return render(request, 'dock_scheduler/home.html', context)
         else:
-            existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
-            activities = DockActivity.objects.exclude(id__in=existing_bookings)
             messages.warning(request, 'Check your form for mistakes')
             context = {
                 'form': form,
@@ -71,9 +75,7 @@ def home(request):
             return render(request, 'dock_scheduler/home.html', context)
 
     else:
-        existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
-        activities = DockActivity.objects.exclude(id__in=existing_bookings)\
-            .filter(time_segment__day=datetime.date.today())
+        activities = activities.filter(time_segment__day=datetime.date.today())
         form = SearchForm()
         context = {
             'form': form,
@@ -90,40 +92,6 @@ def home(request):
 #         'title': 'Bookings'
 #     }
 #     return render(request, 'dock_scheduler/.html', context)
-
-
-def mybookings(request):
-    context = {
-        'form': BookingManagement(),
-        'title': 'My bookings',
-    }
-    if request.method == 'POST':
-        form = BookingManagement(request.POST)
-        if form.is_valid():
-            driver = form.cleaned_data.get('driver')
-            order = form.cleaned_data.get('order')
-            reservation = Booking.objects.filter(driver=driver, order__pk=order)
-
-            context = {
-                'form': form,
-                'bookings': reservation,
-                'title': 'Results',
-            }
-
-            if len(reservation) == 0:
-                messages.warning(request, 'No matching bookings')
-                return render(request, 'dock_scheduler/myreservations.html', context)
-
-            else:
-                return render(request, 'dock_scheduler/myreservations.html', context)
-        else:
-            # if the form is not valid
-            context['form'] = form
-            context['title'] = 'Error'
-            return render(request, 'dock_scheduler/myreservations.html', context)
-
-    else:
-        return render(request, 'dock_scheduler/myreservations.html', context)
 
 
 def scheduleupload(request):
@@ -159,7 +127,7 @@ def scheduleupload(request):
                 messages.warning(request, 'A schedule for this day already exists.')
                 return render(request, 'dock_scheduler/scheduleform.html', context)
 
-            handle_file(request.FILES['schedule'], day)
+            handle_schedule(request.FILES['schedule'], day)
 
             messages.success(request, 'Schedule added!')
 
@@ -202,32 +170,6 @@ class ActivityDetailView(DetailView):
         return context
 
 
-# class BookingFormView(FormView):
-#     form = BookingForm
-#
-#     def form_valid(self, form):
-#         dock_number = form.cleaned_data.get('dock_number')
-#         day = form.cleaned_data.get('day')
-#         start_time = form.cleaned_data.get('start_time')
-#         end_time = form.cleaned_data.get('end_time')
-#         activity = form.cleaned_data.get('activity')
-#         order = form.cleaned_data.get('order')
-#         driver = form.cleaned_data.get('driver')
-#
-#         ts_query = TimeSegment.objects.filter(dock__number=dock_number,
-#                                               day=day,
-#                                               start_time=start_time,
-#                                               end_time=end_time,
-#                                               activity=activity).first()
-#
-#         new_booking = Booking(
-#             time_segment=ts_query,
-#             driver=driver,
-#             order=order)
-#
-#         new_booking.save()
-
-
 class ActivityView(View):
 
     def get(self, request, *args, **kwargs):
@@ -237,13 +179,19 @@ class ActivityView(View):
     def post(self, request, *args, **kwargs):
         form = BookingForm(request.POST)
         if form.is_valid():
+            order = form.cleaned_data.get('order')
+            driver = form.cleaned_data.get('driver')
+            activity = form.cleaned_data.get('activity')
             dock_number = form.cleaned_data.get('dock_number')
             day = form.cleaned_data.get('day')
             start_time = form.cleaned_data.get('start_time')
             end_time = form.cleaned_data.get('end_time')
-            activity = form.cleaned_data.get('activity')
-            order = form.cleaned_data.get('order')
-            driver = form.cleaned_data.get('driver')
+
+            # making sure the requested activity is the same as the one in the order
+            order_query = Order.objects.filter(number=order, activity=activity)
+            if len(order_query) == 0:
+                messages.warning(request, "Order's activity doesn't match the one you want to book.")
+                return redirect('activity-detail', pk=self.kwargs['pk'])
 
             time_segment = TimeSegment.objects.filter(
                 day=day,
