@@ -1,5 +1,5 @@
 import datetime
-from dock_scheduler.models import Dock, TimeSegment, DockActivity
+from dock_scheduler.models import Dock, DockActivity, Order, TimeSegment
 
 
 def handle_schedule(f, day, name='schedule.csv'):
@@ -7,7 +7,7 @@ def handle_schedule(f, day, name='schedule.csv'):
     route = f'dock_scheduler/static/dock_scheduler/{name}'
     preprocess(f, route)
 
-    docks, segments, activities = parse(route)
+    docks, segments, activities = parse_schedule(route)
     cu_docks(docks)
     cu_segments(segments, day)
     cu_activities(activities, day)
@@ -16,6 +16,9 @@ def handle_schedule(f, day, name='schedule.csv'):
 def handle_orders(f, name='orders.csv'):
     route = f'dock_scheduler/static/dock_scheduler/{name}'
     preprocess(f, route)
+
+    orders = parse_orders(route)
+    cu_orders(orders)
 
 
 def preprocess(file, route):
@@ -67,6 +70,20 @@ def cu_activities(activities, day):
         new_activity.save()
 
 
+def cu_orders(orders):
+
+    for order in orders:
+        number = order['number']
+        activity = order['activity']
+
+        existing_order = Order.objects.filter(number=number)
+        if len(existing_order) != 0:
+            existing_order.first().delete()
+        else:
+            new_order = Order(number=number, activity=activity)
+            new_order.save()
+
+
 def translate_activity(activity):
 
     if activity.lower() in ['load', 'carga']:
@@ -89,7 +106,7 @@ def translate_category(category):
     return translation
 
 
-def parse(file_name):
+def parse_schedule(file_name):
 
     docks = []
     segments = []
@@ -123,4 +140,13 @@ def parse(file_name):
 
 
 def parse_orders(file_name):
-    pass
+    orders = []
+    with open(file_name, 'r') as file:
+        # skipping header
+        next(file)
+        for line in file:
+            order, activity = line.rstrip().split(';')[1:]
+            activity = translate_activity(activity)
+            print(order)
+            orders.append(dict(number=order, activity=activity))
+    return orders

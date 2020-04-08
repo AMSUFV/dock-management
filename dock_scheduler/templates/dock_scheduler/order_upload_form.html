@@ -1,0 +1,20 @@
+{% extends "dock_scheduler/base.html" %}
+{% load crispy_forms_tags %}
+{% block form_block %}
+<div class="col-md-4">
+    <div class="content-section">
+        <form enctype="multipart/form-data" method="post">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Upload orders</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Upload</button>
+            </div>
+            <small class="text-danger">If an order exists it'll be overwritten</small>
+        </form>
+    </div>
+</div>
+<div class="col-md-8"></div>
+{% endblock form_block %}

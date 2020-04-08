@@ -1,5 +1,5 @@
 from django import forms
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, FileExtensionValidator
 import datetime
 
 
@@ -164,10 +164,14 @@ class DailySchedule(forms.Form):
         label='Date',
         help_text='Year-Month-Day format: 2020-03-25'
     )
-    schedule = forms.FileField()
+    schedule = forms.FileField(validators=[FileExtensionValidator(allowed_extensions=['csv'])])
 
     def clean_day(self):
         day = self.cleaned_data['day']
         if day < datetime.date.today():
             raise forms.ValidationError("Can't set a schedule for the past.")
         return day
+
+
+class UploadOrders(forms.Form):
+    file = forms.FileField(validators=[FileExtensionValidator(allowed_extensions=['csv'])])

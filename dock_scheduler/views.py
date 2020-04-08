@@ -8,7 +8,7 @@ from django.views.generic import DetailView, FormView, DeleteView
 
 from .forms import *
 from .models import *
-from .utils.csv_parser import handle_schedule
+from .utils.csv_parser import handle_schedule, handle_orders
 
 
 # TODO: add load or unload field for orders and add the logic for the reservations
@@ -85,15 +85,6 @@ def home(request):
         return render(request, 'dock_scheduler/home.html', context)
 
 
-# @staff_member_required()
-# def bookings(request):
-#     context = {
-#         'bookings': Booking.objects.all(),
-#         'title': 'Bookings'
-#     }
-#     return render(request, 'dock_scheduler/.html', context)
-
-
 def scheduleupload(request):
     context = {
         'form': DailySchedule(),
@@ -125,20 +116,35 @@ def scheduleupload(request):
 
             if len(today_activities):
                 messages.warning(request, 'A schedule for this day already exists.')
-                return render(request, 'dock_scheduler/scheduleform.html', context)
+                return render(request, 'dock_scheduler/schedule_upload_form.html', context)
 
             handle_schedule(request.FILES['schedule'], day)
 
             messages.success(request, 'Schedule added!')
 
-            return render(request, 'dock_scheduler/scheduleform.html', context)
+            return render(request, 'dock_scheduler/schedule_upload_form.html', context)
 
         else:
             messages.warning(request, 'Check the form for errors')
             context['form'] = form
-            return render(request, 'dock_scheduler/scheduleform.html', context)
+            return render(request, 'dock_scheduler/schedule_upload_form.html', context)
     else:
-        return render(request, 'dock_scheduler/scheduleform.html', context)
+        return render(request, 'dock_scheduler/schedule_upload_form.html', context)
+
+
+def order_upload(request):
+    if request.method == 'POST':
+        form = UploadOrders(request.POST, request.FILES)
+        if form.is_valid():
+            handle_orders(request.FILES['file'])
+            messages.success(request, 'Orders added successfully!')
+            return redirect('/')
+        else:
+            messages.warning(request, 'Invalid file.')
+            return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
+    else:
+        form = UploadOrders()
+        return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
 
 
 class ActivityDetailView(DetailView):
