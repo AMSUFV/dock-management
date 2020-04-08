@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'barrier.apps.BarrierConfig',
     'dock_scheduler.apps.DockSchedulerConfig',
     'crispy_forms',
     'django.contrib.admin',

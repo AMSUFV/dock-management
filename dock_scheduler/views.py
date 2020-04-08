@@ -1,10 +1,8 @@
-import datetime
-
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from django.views import View
-from django.views.generic import DetailView, FormView, DeleteView
+from django.views.generic import DetailView, DeleteView
 
 from .forms import *
 from .models import *
