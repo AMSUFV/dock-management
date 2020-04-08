@@ -125,7 +125,9 @@ class Order(models.Model):
     ]
     activity = models.CharField(
         max_length=2,
-        choices=ACTIVITIES)
+        choices=ACTIVITIES,
+        default='LO',
+    )
 
     def __str__(self):
         return f'{self.number}'
