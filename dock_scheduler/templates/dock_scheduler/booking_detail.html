@@ -1,0 +1,18 @@
+{% extends "dock_scheduler/base.html" %}
+{% block content %}
+<div class="col-md-8">
+    <a href="#" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">Order: {{ object.order }}</h5>
+            <small>{{ object.driver }}</small>
+        </div>
+        <div class="d-flex w-100 justify-content-between">
+            <p class="mb-1">{{ object.dock_activity.time_segment }}</p>
+            <small>{{ object.dock_activity.activity }}</small>
+        </div>
+    </a>
+    <div class="d-flex justify-content-end">
+        <a class="btn btn-outline-danger" href="{% url 'booking-delete' object.id %}">Cancel booking</a>
+    </div>
+</div>
+{% endblock content %}

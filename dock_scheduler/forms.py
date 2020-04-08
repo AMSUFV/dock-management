@@ -35,6 +35,7 @@ class BookingForm(forms.Form):
     driver = forms.CharField(
         label='License plate',
         max_length=15,
+        validators=[RegexValidator(r'^\w{1,15}$', 'License plate can only contain numbers and letters.')]
     )
 
     # Vehicle tu use

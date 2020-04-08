@@ -144,4 +144,4 @@ class Booking(models.Model):
         return f'{self.driver} at {str(self.dock_activity)}'
 
     def get_absolute_url(self):
-        return reverse('activity-detail', kwargs={'pk': self.pk})
+        return reverse('booking-detail', kwargs={'pk': self.pk})

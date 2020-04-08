@@ -3,6 +3,7 @@ from dock_scheduler.models import Dock, TimeSegment, DockActivity
 
 
 def handle_file(f, day):
+
     route = 'dock_scheduler/static/dock_scheduler/schedule.csv'
     with open(route, 'wb+') as destination:
         for chunk in f.chunks():
@@ -14,29 +15,36 @@ def handle_file(f, day):
     cu_activities(activities, day)
 
 
-# TODO: return error and error code if user tries to override an existing dock's category
 def cu_docks(docks):
+
     for dock in docks:
         number = dock['number']
         category = translate_category(dock['category'])
 
-        if len(Dock.objects.filter(number=number)) == 0:
-            new_dock = Dock(number=number, category=category)
-            new_dock.save()
+        existing_dock = Dock.objects.filter(number=number)
+        if len(existing_dock):
+            existing_dock.delete()
+
+        new_dock = Dock(number=number, category=category)
+        new_dock.save()
 
 
-# TODO: handle existing segments for that day
 def cu_segments(segments, day):
+
+    existing_segments = TimeSegment.objects.filter(day=day)
+    if len(existing_segments):
+        existing_segments.delete()
+
     for segment in segments:
         start_time = segment['start_time']
         end_time = segment['end_time']
-        if len(TimeSegment.objects.filter(day=day, start_time=start_time, end_time=end_time)) == 0:
-            new_segment = TimeSegment(day=day, start_time=start_time, end_time=end_time)
-            new_segment.save()
+
+        new_segment = TimeSegment(day=day, start_time=start_time, end_time=end_time)
+        new_segment.save()
 
 
-# TODO: handle name miss-match
 def cu_activities(activities, day):
+
     for activity in activities:
         dock_number = activity['dock_number']
         start_time = activity['time_segment']['start_time']
@@ -72,12 +80,13 @@ def translate_category(category):
     return translation
 
 
-
 def parse(file_name):
+
     docks = []
     segments = []
     activities = []
     delimiter = ';'
+
     with open(file_name, 'r') as file:
         for i, line in enumerate(file):
             columns = line.rstrip().split(delimiter)

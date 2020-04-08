@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
 from django.views import View
-from django.views.generic import DetailView, FormView
+from django.views.generic import DetailView, FormView, DeleteView
 
 from .forms import *
 from .models import *
@@ -202,33 +202,33 @@ class ActivityDetailView(DetailView):
         return context
 
 
-class BookingFormView(FormView):
-    form = BookingForm
+# class BookingFormView(FormView):
+#     form = BookingForm
+#
+#     def form_valid(self, form):
+#         dock_number = form.cleaned_data.get('dock_number')
+#         day = form.cleaned_data.get('day')
+#         start_time = form.cleaned_data.get('start_time')
+#         end_time = form.cleaned_data.get('end_time')
+#         activity = form.cleaned_data.get('activity')
+#         order = form.cleaned_data.get('order')
+#         driver = form.cleaned_data.get('driver')
+#
+#         ts_query = TimeSegment.objects.filter(dock__number=dock_number,
+#                                               day=day,
+#                                               start_time=start_time,
+#                                               end_time=end_time,
+#                                               activity=activity).first()
+#
+#         new_booking = Booking(
+#             time_segment=ts_query,
+#             driver=driver,
+#             order=order)
+#
+#         new_booking.save()
 
-    def form_valid(self, form):
-        dock_number = form.cleaned_data.get('dock_number')
-        day = form.cleaned_data.get('day')
-        start_time = form.cleaned_data.get('start_time')
-        end_time = form.cleaned_data.get('end_time')
-        activity = form.cleaned_data.get('activity')
-        order = form.cleaned_data.get('order')
-        driver = form.cleaned_data.get('driver')
 
-        ts_query = TimeSegment.objects.filter(dock__number=dock_number,
-                                              day=day,
-                                              start_time=start_time,
-                                              end_time=end_time,
-                                              activity=activity).first()
-
-        new_booking = Booking(
-            time_segment=ts_query,
-            driver=driver,
-            order=order)
-
-        new_booking.save()
-
-
-class DetailView(View):
+class ActivityView(View):
 
     def get(self, request, *args, **kwargs):
         view = ActivityDetailView.as_view()
@@ -280,3 +280,48 @@ class DetailView(View):
         else:
             messages.warning(request, 'Enter a valid order and license plate')
             return redirect('activity-detail', pk=self.kwargs['pk'])
+
+
+class BookingView(View):
+    context = {
+        'form': BookingManagement(),
+        'title': 'My bookings',
+    }
+
+    def get(self, request, *args, **kwargs):
+        return render(request, 'dock_scheduler/myreservations.html', self.context)
+
+    def post(self, request, *args, **kwargs):
+        form = BookingManagement(request.POST)
+        if form.is_valid():
+            driver = form.cleaned_data.get('driver')
+            order = form.cleaned_data.get('order')
+            reservation = Booking.objects.filter(driver=driver, order__pk=order)
+
+            self.context = {
+                'form': form,
+                'bookings': reservation,
+                'title': 'Results',
+            }
+
+            if len(reservation) == 0:
+                messages.warning(request, 'No matching bookings')
+                # return render(request, 'dock_scheduler/myreservations.html', self.context)
+                return redirect('booking-detail', pk=reservation.number)
+
+            else:
+                return render(request, 'dock_scheduler/myreservations.html', self.context)
+        else:
+            # if the form is not valid
+            self.context['form'] = form
+            self.context['title'] = 'Error'
+            return render(request, 'dock_scheduler/myreservations.html', self.context)
+
+
+class BookingDetailView(DetailView):
+    model = Booking
+
+
+class BookingDelete(DeleteView):
+    model = Booking
+    success_url = '/'
