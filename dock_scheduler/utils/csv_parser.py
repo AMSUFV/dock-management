@@ -74,7 +74,7 @@ def cu_orders(orders):
 
     for order in orders:
         number = order['number']
-        activity = order['activity']
+        activity = translate_activity(order['activity'])
 
         existing_order = Order.objects.filter(number=number)
         if len(existing_order) != 0:
