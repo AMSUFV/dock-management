@@ -30,15 +30,30 @@ class HomeListView(ListView):
         activities = DockActivity.objects \
             .exclude(id__in=existing_bookings) \
             .exclude(id__in=unavailable)
+
+        activity = self.kwargs.get('activity')
+        vehicle = self.kwargs.get('vehicle')
+
+        if vehicle is not None and activity is not None:
+            activities = activities.filter(dock__category=vehicle, activity=activity)\
+                                   .order_by('dock__number')
+
+        if 'day' in self.kwargs.keys():
+            activities = activities.filter(time_segment__day=self.kwargs['day'])
+
+        if {'start_time', 'end_time'}.issubset(set(self.kwargs)):
+            activities = activities.filter(
+                time_segment__start_time=self.kwargs['start_time'],
+                time_segment__end_time=self.kwargs['end_time'],
+            )
+
+        elif 'start_time' in self.kwargs.keys():
+            activities = activities.filter(time_segment__start_time__gte=self.kwargs['start_time'])
+
+        elif 'end_time' in self.kwargs.keys():
+            activities = activities.filter(time_segment__end_time__lte=self.kwargs['end_time'])
+
         return activities
-
-
-class FilteredHomeListView(ListView):
-    model = DockActivity
-    template_name = 'dock_scheduler/home.html'
-    context_object_name = 'activities'
-    ordering = ['time_segment__day', 'time_segment__start_time']
-    paginate_by = 8
 
 
 class Home(View):
@@ -48,58 +63,23 @@ class Home(View):
         return view(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-
-        unavailable = DockActivity.objects.filter(activity='UA')
-        existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
-        activities = DockActivity.objects \
-            .exclude(id__in=existing_bookings) \
-            .exclude(id__in=unavailable)
-
         form = SearchForm(request.POST)
         if form.is_valid():
-            # data extraction
-            activity = form.cleaned_data.get('activity')
-            vehicle = form.cleaned_data.get('vehicle')
-            day = form.cleaned_data.get('day')
-            start_time = form.cleaned_data.get('start_time')
-            end_time = form.cleaned_data.get('end_time')
 
-            # initial query for activity and vehicle
-            ac_ve_query = DockActivity.objects \
-                .exclude(id__in=existing_bookings) \
-                .exclude(id__in=unavailable) \
-                .filter(dock__category=vehicle,
-                        activity=activity)
+            passing_values = dict()
+            for key, value in form.cleaned_data.items():
+                if value is not None:
+                    passing_values[key] = value
 
-            if day is not None:
-                ac_ve_query = ac_ve_query.filter(
-                    time_segment__day=day
-                )
-            # if both times are supplied, we'll do an exact query
-            if start_time is not None and end_time is not None:
-                ac_ve_query = ac_ve_query.filter(
-                    time_segment__start_time=start_time,
-                    time_segment__end_time=end_time,
-                )
-            # if start time is introduced, we'll show all the segments greater or equal to that one
-            elif start_time is not None:
-                ac_ve_query = ac_ve_query.filter(
-                    time_segment__start_time__gte=start_time,
-                )
-            # if end time is introduced, we'll show all the segments less than or equal to that one
-            elif end_time is not None:
-                ac_ve_query = ac_ve_query.filter(
-                    time_segment__end_time__lte=end_time,
-                )
-
-            context = {
-                'form': form,
-                'activities': ac_ve_query,
-                'title': 'Search',
-            }
-
-            return render(request, 'dock_scheduler/home.html', context)
+            return redirect('scheduler-home', **passing_values)
         else:
+            unavailable = DockActivity.objects.filter(activity='UA')
+            existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+
+            activities = DockActivity.objects \
+                .exclude(id__in=existing_bookings) \
+                .exclude(id__in=unavailable)
+
             messages.warning(request, 'Check your form for mistakes')
             context = {
                 'form': form,
