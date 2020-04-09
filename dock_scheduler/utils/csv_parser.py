@@ -74,7 +74,7 @@ def cu_orders(orders):
 
     for order in orders:
         number = order['number']
-        activity = translate_activity(order['activity'])
+        activity = order['activity']
 
         existing_order = Order.objects.filter(number=number)
         if len(existing_order) != 0:
@@ -147,6 +147,5 @@ def parse_orders(file_name):
         for line in file:
             order, activity = line.rstrip().split(';')[1:]
             activity = translate_activity(activity)
-            print(order)
             orders.append(dict(number=order, activity=activity))
     return orders
