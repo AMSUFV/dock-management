@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, DeleteView
 
@@ -9,7 +10,6 @@ from .models import *
 from .utils.csv_parser import handle_schedule, handle_orders
 
 
-# TODO: add load or unload field for orders and add the logic for the reservations
 def home(request):
     unavailable = DockActivity.objects.filter(activity='UA')
     existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
@@ -83,6 +83,7 @@ def home(request):
         return render(request, 'dock_scheduler/home.html', context)
 
 
+@staff_member_required(login_url=reverse_lazy('login'))
 def scheduleupload(request):
     context = {
         'form': DailySchedule(),
@@ -116,10 +117,14 @@ def scheduleupload(request):
                 messages.warning(request, 'A schedule for this day already exists.')
                 return render(request, 'dock_scheduler/schedule_upload_form.html', context)
 
-            handle_schedule(request.FILES['schedule'], day)
+            try:
+                handle_schedule(request.FILES['schedule'], day)
+            except (ValueError, TypeError, IndexError):
+                messages.warning(request, 'Something went wrong while handling your file. '
+                                          'Make sure you have the right file and that no typos are present in it.')
+                return render(request, 'dock_scheduler/schedule_upload_form.html', context=dict(form=form))
 
             messages.success(request, 'Schedule added!')
-
             return render(request, 'dock_scheduler/schedule_upload_form.html', context)
 
         else:
@@ -130,13 +135,21 @@ def scheduleupload(request):
         return render(request, 'dock_scheduler/schedule_upload_form.html', context)
 
 
+@staff_member_required(login_url=reverse_lazy('login'))
 def order_upload(request):
     if request.method == 'POST':
         form = UploadOrders(request.POST, request.FILES)
         if form.is_valid():
-            handle_orders(request.FILES['file'])
+            try:
+                handle_orders(request.FILES['file'])
+            except (ValueError, TypeError, IndexError):
+                messages.warning(request, 'Something went wrong while handling your file. '
+                                          'Make sure you have the right file and that no typos are present in it.')
+                return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
+
             messages.success(request, 'Orders added successfully!')
             return redirect('/')
+
         else:
             messages.warning(request, 'Invalid file.')
             return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
@@ -259,7 +272,7 @@ class BookingView(View):
             if len(reservation) == 0:
                 messages.warning(request, 'No matching bookings')
                 # return render(request, 'dock_scheduler/myreservations.html', self.context)
-                return redirect('booking-detail', pk=reservation.number)
+                return render(request, 'dock_scheduler/myreservations.html', self.context)
 
             else:
                 return render(request, 'dock_scheduler/myreservations.html', self.context)
@@ -277,3 +290,8 @@ class BookingDetailView(DetailView):
 class BookingDelete(DeleteView):
     model = Booking
     success_url = '/'
+
+
+def tft_screen(request):
+    bookings = Booking.objects.filter(dock_activity__time_segment__day=today)
+    return render(request, 'dock_scheduler/tft_screen.html', context=dict(bookings=bookings))

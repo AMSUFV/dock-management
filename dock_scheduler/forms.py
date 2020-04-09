@@ -2,6 +2,8 @@ from django import forms
 from django.core.validators import RegexValidator, FileExtensionValidator
 import datetime
 
+today = datetime.date.today()
+
 
 # TODO: check that the day must be greater or equal than today
 class BookingForm(forms.Form):
@@ -58,7 +60,7 @@ class BookingForm(forms.Form):
     # Booking day and time
     day = forms.DateField(
         label='Date',
-        help_text='Year-Month-Day format: 2020-03-25'
+        help_text=f'Year-Month-Day. Today: {today}',
     )
     start_time = forms.TimeField(
         label='Start time',
@@ -68,6 +70,11 @@ class BookingForm(forms.Form):
         label='End time',
         help_text='Hour:Minute format: 14:30',
     )
+
+    def clean_driver(self):
+        driver = self.cleaned_data['driver']
+        driver = driver.upper()
+        return driver
 
 
 # Form used to consult and delete the reservation
@@ -126,7 +133,7 @@ class SearchForm(forms.Form):
     # Booking day and time
     day = forms.DateField(
         label='Date',
-        help_text='Year-Month-Day format: 2020-03-25',
+        help_text=f'Year-Month-Day. Today: {today}',
         required=False,
     )
     start_time = forms.TimeField(
@@ -162,7 +169,7 @@ class DailySchedule(forms.Form):
     # Booking day and time
     day = forms.DateField(
         label='Date',
-        help_text='Year-Month-Day format: 2020-03-25'
+        help_text=f'Year-Month-Day. Today: {today}',
     )
     schedule = forms.FileField(validators=[FileExtensionValidator(allowed_extensions=['csv'])])
 

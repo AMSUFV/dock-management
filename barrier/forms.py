@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 
 
 class BarrierControlForm(forms.Form):
+    today = datetime.date.today()
     # Driver's license plate
     driver = forms.CharField(
         label='License plate',
@@ -14,11 +15,22 @@ class BarrierControlForm(forms.Form):
 
     day = forms.DateField(
         label='Date',
-        help_text='Year-Month-Day format: 2020-03-25'
+        help_text=f'Year-Month-Day. Today: {today}',
     )
     hour = forms.TimeField(
         label='Current time',
         help_text='Hour:Minute format: 14:30',
+    )
+
+    ENTRY = 'IN'
+    EXIT = 'OUT'
+    CHOICES = [
+        (ENTRY, 'Going in'),
+        (EXIT, 'Going out')
+    ]
+    direction = forms.CharField(
+        label='Where are you going?',
+        widget=forms.Select(choices=CHOICES),
     )
 
     def clean_day(self):
@@ -29,3 +41,8 @@ class BarrierControlForm(forms.Form):
                 raise forms.ValidationError("You can't go back to the past McFly!")
 
         return day
+
+    def clean_driver(self):
+        driver = self.cleaned_data['driver']
+        driver = driver.upper()
+        return driver
