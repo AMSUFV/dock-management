@@ -164,6 +164,7 @@ def home(request):
 
 @staff_member_required(login_url=reverse_lazy('login'))
 def scheduleupload(request):
+
     context = {
         'form': DailySchedule(),
         'title': 'Schedule',
@@ -191,8 +192,9 @@ def scheduleupload(request):
         form = DailySchedule(request.POST, request.FILES)
         if form.is_valid():
             day = form.cleaned_data.get('day')
+            day_activities = DockActivity.objects.filter(time_segment__day=day)
 
-            if len(today_activities):
+            if len(day_activities):
                 messages.warning(request, 'A schedule for this day already exists.')
                 return render(request, 'dock_scheduler/schedule_upload_form.html', context)
 
