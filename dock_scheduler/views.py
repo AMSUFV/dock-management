@@ -1,13 +1,112 @@
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, DeleteView
+from django.views.generic import DetailView, DeleteView, ListView
 
 from .forms import *
 from .models import *
 from .utils.csv_parser import handle_schedule, handle_orders
+
+
+class HomeListView(ListView):
+    model = DockActivity
+    template_name = 'dock_scheduler/home.html'
+    context_object_name = 'activities'
+    ordering = ['time_segment__day', 'time_segment__start_time']
+    paginate_by = 8
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(HomeListView, self).get_context_data(**kwargs)
+        form = SearchForm()
+        context['form'] = form
+
+        return context
+
+    def get_queryset(self, **kwargs):
+        unavailable = DockActivity.objects.filter(activity='UA')
+        existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+        activities = DockActivity.objects \
+            .exclude(id__in=existing_bookings) \
+            .exclude(id__in=unavailable)
+        return activities
+
+
+class FilteredHomeListView(ListView):
+    model = DockActivity
+    template_name = 'dock_scheduler/home.html'
+    context_object_name = 'activities'
+    ordering = ['time_segment__day', 'time_segment__start_time']
+    paginate_by = 8
+
+
+class Home(View):
+
+    def get(self, request, *args, **kwargs):
+        view = HomeListView.as_view()
+        return view(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+
+        unavailable = DockActivity.objects.filter(activity='UA')
+        existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
+        activities = DockActivity.objects \
+            .exclude(id__in=existing_bookings) \
+            .exclude(id__in=unavailable)
+
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            # data extraction
+            activity = form.cleaned_data.get('activity')
+            vehicle = form.cleaned_data.get('vehicle')
+            day = form.cleaned_data.get('day')
+            start_time = form.cleaned_data.get('start_time')
+            end_time = form.cleaned_data.get('end_time')
+
+            # initial query for activity and vehicle
+            ac_ve_query = DockActivity.objects \
+                .exclude(id__in=existing_bookings) \
+                .exclude(id__in=unavailable) \
+                .filter(dock__category=vehicle,
+                        activity=activity)
+
+            if day is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__day=day
+                )
+            # if both times are supplied, we'll do an exact query
+            if start_time is not None and end_time is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__start_time=start_time,
+                    time_segment__end_time=end_time,
+                )
+            # if start time is introduced, we'll show all the segments greater or equal to that one
+            elif start_time is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__start_time__gte=start_time,
+                )
+            # if end time is introduced, we'll show all the segments less than or equal to that one
+            elif end_time is not None:
+                ac_ve_query = ac_ve_query.filter(
+                    time_segment__end_time__lte=end_time,
+                )
+
+            context = {
+                'form': form,
+                'activities': ac_ve_query,
+                'title': 'Search',
+            }
+
+            return render(request, 'dock_scheduler/home.html', context)
+        else:
+            messages.warning(request, 'Check your form for mistakes')
+            context = {
+                'form': form,
+                'activities': activities,
+                'title': 'Search',
+            }
+            return render(request, 'dock_scheduler/home.html', context)
 
 
 def home(request):
