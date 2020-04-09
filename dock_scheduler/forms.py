@@ -138,12 +138,12 @@ class SearchForm(forms.Form):
     )
     start_time = forms.TimeField(
         label='Start time',
-        help_text='Hour:Minute format: 14:30',
+        help_text='Hour:Minute format: 10:00',
         required=False,
     )
     end_time = forms.TimeField(
         label='End time',
-        help_text='Hour:Minute format: 15:30',
+        help_text='Hour:Minute format: 11:00',
         required=False,
     )
 
