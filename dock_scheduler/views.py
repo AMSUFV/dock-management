@@ -85,15 +85,6 @@ class Home(View):
             return render(request, 'dock_scheduler/home.html', context)
 
 
-def home(request):
-    unavailable = DockActivity.objects.filter(activity='UA')
-    existing_bookings = (b.dock_activity.id for b in Booking.objects.all())
-
-    activities = DockActivity.objects \
-        .exclude(id__in=existing_bookings) \
-        .exclude(id__in=unavailable)
-
-
 @staff_member_required(login_url=reverse_lazy('login'))
 def scheduleupload(request):
 

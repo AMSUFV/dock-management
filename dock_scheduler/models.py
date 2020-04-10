@@ -156,5 +156,9 @@ class Booking(models.Model):
     def __str__(self):
         return f'{self.driver} at {str(self.dock_activity)}'
 
+    def clean(self):
+        if self.order.activity != self.dock_activity.activity:
+            raise ValidationError("The scheduled activity does not match the order's activity. ")
+
     def get_absolute_url(self):
         return reverse('booking-detail', kwargs={'pk': self.pk})
