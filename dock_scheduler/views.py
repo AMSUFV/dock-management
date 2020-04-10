@@ -85,83 +85,6 @@ class Home(View):
             return render(request, 'dock_scheduler/home.html', context)
 
 
-@staff_member_required(login_url=reverse_lazy('login'))
-def scheduleupload(request):
-
-    context = {
-        'form': DailySchedule(),
-        'title': 'Schedule',
-    }
-    # get today's date and schedule
-    today = datetime.date.today()
-    segments = TimeSegment.objects.filter(day=today)
-    today_activities = DockActivity.objects.filter(time_segment__day=today)
-    numbers = today_activities.order_by().values_list('dock', flat=True).distinct()
-    docks = Dock.objects.filter(number__in=numbers)
-
-    daily_schedules = []
-    for i, dock in enumerate(docks):
-        activities = today_activities.filter(dock__number=dock.number)
-        daily_schedule = [dock.number, dock.category]
-        for activity in activities:
-            daily_schedule.append(activity.activity)
-        daily_schedules.append(daily_schedule)
-
-    context['segments'] = segments
-    context['daily_schedules'] = daily_schedules
-
-    if request.method == 'POST':
-
-        form = DailySchedule(request.POST, request.FILES)
-        if form.is_valid():
-            day = form.cleaned_data.get('day')
-            day_activities = DockActivity.objects.filter(time_segment__day=day)
-
-            if len(day_activities):
-                messages.warning(request, 'A schedule for this day already exists.')
-                return render(request, 'dock_scheduler/schedule_upload_form.html', context)
-
-            try:
-                handle_schedule(request.FILES['schedule'], day)
-            except (ValueError, TypeError, IndexError):
-                messages.warning(request, 'Something went wrong while handling your file. '
-                                          'Make sure you have the right file and that no typos are present in it.')
-                return render(request, 'dock_scheduler/schedule_upload_form.html', context=dict(form=form))
-
-            messages.success(request, 'Schedule added!')
-            return render(request, 'dock_scheduler/schedule_upload_form.html', context)
-
-        else:
-            messages.warning(request, 'Check the form for errors')
-            context['form'] = form
-            return render(request, 'dock_scheduler/schedule_upload_form.html', context)
-    else:
-        return render(request, 'dock_scheduler/schedule_upload_form.html', context)
-
-
-@staff_member_required(login_url=reverse_lazy('login'))
-def order_upload(request):
-    if request.method == 'POST':
-        form = UploadOrders(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                handle_orders(request.FILES['file'])
-            except (ValueError, TypeError, IndexError):
-                messages.warning(request, 'Something went wrong while handling your file. '
-                                          'Make sure you have the right file and that no typos are present in it.')
-                return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
-
-            messages.success(request, 'Orders added successfully!')
-            return redirect('/')
-
-        else:
-            messages.warning(request, 'Invalid file.')
-            return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
-    else:
-        form = UploadOrders()
-        return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
-
-
 class ActivityDetailView(DetailView):
     model = DockActivity
 
@@ -299,3 +222,81 @@ class BookingDelete(DeleteView):
 def tft_screen(request):
     bookings = Booking.objects.filter(dock_activity__time_segment__day=today)
     return render(request, 'dock_scheduler/tft_screen.html', context=dict(bookings=bookings))
+
+
+@staff_member_required(login_url=reverse_lazy('login'))
+def scheduleupload(request):
+
+    context = {
+        'form': DailySchedule(),
+        'title': 'Schedule',
+    }
+    # get today's date and schedule
+    today = datetime.date.today()
+    segments = TimeSegment.objects.filter(day=today)
+    today_activities = DockActivity.objects.filter(time_segment__day=today)
+    numbers = today_activities.order_by().values_list('dock', flat=True).distinct()
+    docks = Dock.objects.filter(number__in=numbers)
+
+    daily_schedules = []
+    for i, dock in enumerate(docks):
+        activities = today_activities.filter(dock__number=dock.number)
+        daily_schedule = [dock.number, dock.category]
+        for activity in activities:
+            daily_schedule.append(activity.activity)
+        daily_schedules.append(daily_schedule)
+
+    context['segments'] = segments
+    context['daily_schedules'] = daily_schedules
+
+    if request.method == 'POST':
+
+        form = DailySchedule(request.POST, request.FILES)
+        if form.is_valid():
+            day = form.cleaned_data.get('day')
+            day_activities = DockActivity.objects.filter(time_segment__day=day)
+
+            if len(day_activities):
+                messages.warning(request, 'A schedule for this day already exists.')
+                return render(request, 'dock_scheduler/schedule_upload_form.html', context)
+
+            try:
+                handle_schedule(request.FILES['schedule'], day)
+            except (ValueError, TypeError, IndexError):
+                messages.warning(request, 'Something went wrong while handling your file. '
+                                          'Make sure you have the right file and that no typos are present in it.')
+                return render(request, 'dock_scheduler/schedule_upload_form.html', context=dict(form=form))
+
+            messages.success(request, 'Schedule added!')
+            return render(request, 'dock_scheduler/schedule_upload_form.html', context)
+
+        else:
+            messages.warning(request, 'Check the form for errors')
+            context['form'] = form
+            return render(request, 'dock_scheduler/schedule_upload_form.html', context)
+    else:
+        return render(request, 'dock_scheduler/schedule_upload_form.html', context)
+
+
+@staff_member_required(login_url=reverse_lazy('login'))
+def order_upload(request):
+    if request.method == 'POST':
+        form = UploadOrders(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                handle_orders(request.FILES['file'])
+            except (ValueError, TypeError, IndexError):
+                messages.warning(request, 'Something went wrong while handling your file. '
+                                          'Make sure you have the right file and that no typos are present in it.')
+                return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
+
+            messages.success(request, 'Orders added successfully!')
+            return redirect('/')
+
+        else:
+            messages.warning(request, 'Invalid file.')
+            return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
+    else:
+        form = UploadOrders()
+        return render(request, 'dock_scheduler/order_upload_form.html', context=dict(form=form))
+

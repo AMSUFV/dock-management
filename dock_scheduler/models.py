@@ -162,3 +162,7 @@ class Booking(models.Model):
 
     def get_absolute_url(self):
         return reverse('booking-detail', kwargs={'pk': self.pk})
+
+    def save(self, *args, **kwargs):
+        self.driver = self.driver.upper()
+        super().save(*args, **kwargs)
