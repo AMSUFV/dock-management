@@ -35,7 +35,8 @@ def cu_docks(docks):
 
         existing_dock = Dock.objects.filter(number=number)
         if len(existing_dock):
-            existing_dock.delete()
+            if existing_dock.first().category != category:
+                existing_dock.delete()
 
         new_dock = Dock(number=number, category=category)
         new_dock.save()
