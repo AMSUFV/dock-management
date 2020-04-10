@@ -43,7 +43,7 @@ class HomeListView(ListView):
         if day != 'None':
             activities = activities.filter(time_segment__day=day)
 
-        elif start_time != 'None' and end_time != 'None':
+        if start_time != 'None' and end_time != 'None':
             activities = activities.filter(time_segment__start_time__gte=start_time)\
                                    .filter(time_segment__end_time__lte=end_time)
         elif start_time != 'None':
