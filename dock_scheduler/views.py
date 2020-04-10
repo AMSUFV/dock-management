@@ -31,25 +31,29 @@ class HomeListView(ListView):
             .exclude(id__in=existing_bookings) \
             .exclude(id__in=unavailable)
 
+        for key, value in self.kwargs.items():
+            if value == 'None':
+                self.kwargs[key] = None
+
         activity = self.kwargs.get('activity')
         vehicle = self.kwargs.get('vehicle')
         day = self.kwargs.get('day')
         start_time = self.kwargs.get('start_time')
         end_time = self.kwargs.get('end_time')
 
-        if vehicle != 'None' and activity != 'None':
+        if vehicle is not None and activity is not None:
             activities = activities.filter(dock__category=vehicle, activity=activity)
 
-        if day != 'None':
+        if day is not None:
             activities = activities.filter(time_segment__day=day)
 
-        if start_time != 'None' and end_time != 'None':
+        if start_time is not None and end_time is not None:
             activities = activities.filter(time_segment__start_time__gte=start_time)\
                                    .filter(time_segment__end_time__lte=end_time)
-        elif start_time != 'None':
+        elif start_time is not None:
             activities = activities.filter(time_segment__start_time__gte=start_time)
 
-        elif end_time != 'None':
+        elif end_time is not None:
             activities = activities.filter(time_segment__end_time__lte=end_time)
 
         activities = activities.order_by('time_segment__day').order_by('time_segment__start_time')
