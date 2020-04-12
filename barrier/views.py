@@ -64,16 +64,21 @@ class BarrierControl(View):
                     return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
             else:
                 bookings = Booking.objects.filter(dock_activity__time_segment__day=day, driver=driver)
-                if len(bookings) == 0:
-                    messages.warning(request, "You shouldn't be here today. You have no reservations.")
-                    return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
-                else:
-                    booking = bookings.first()
-                    dock = booking.dock_activity.dock
-                    dock.state = 'FR'
-                    dock.save()
-                    booking.delete()
-                    messages.success(request, 'Barrier open. Have a nice day.')
-                    return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
+            if len(bookings) == 0:
+                messages.warning(request, "You shouldn't be here today. You have no reservations.")
+                return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
+            elif bookings.first().dock_activity.dock.state == 'FR':
+                messages.warning(request, "Your entrance wasn't registered. Please wait until our personnel "
+                                          "verifies your reservation.")
+                return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
+
+            else:
+                booking = bookings.first()
+                dock = booking.dock_activity.dock
+                dock.state = 'FR'
+                dock.save()
+                booking.delete()
+                messages.success(request, 'Barrier open. Have a nice day.')
+                return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
         else:
             return render(request, 'barrier/barrier_simulation.html', context=dict(form=form))
