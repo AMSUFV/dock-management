@@ -150,7 +150,8 @@ class Booking(models.Model):
     # driver's license plate
     driver = models.CharField(
         max_length=15,
-        validators=[RegexValidator(r'^\w{1,15}$', 'License plate can only contain numbers and letters.')]
+        validators=[RegexValidator(r'^\w{1,15}$', 'License plate can only contain numbers and letters.')],
+        verbose_name='License plate',
     )
 
     def __str__(self):
